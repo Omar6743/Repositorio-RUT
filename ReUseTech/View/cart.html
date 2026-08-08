@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Carritos - Sistema Moderno</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #6366f1;
+      --secondary-color: #4f46e5;
+      --accent-color: #818cf8;
+      --background-color: #f8fafc;
+      --card-bg: #ffffff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background-color);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background: var(--card-bg);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      background: var(--primary-color);
+      color: white;
+      border-radius: 1rem 1rem 0 0 !important;
+      padding: 1.5rem;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--secondary-color);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #475569;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .item-entry {
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    .item-entry:hover {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .form-control, .form-select {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
+    }
+
+    .table {
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .table thead th {
+      background: #f1f5f9;
+      border-bottom: none;
+      padding: 1rem;
+    }
+
+    .table tbody td {
+      padding: 1rem;
+      vertical-align: middle;
+    }
+
+    .badge {
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-weight: 500;
+    }
+
+    .btn-action {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-edit {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      color: white;
+    }
+
+    .loader {
+      width: 100%;
+      height: 4px;
+      background: #f3f4f6;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    .loader::after {
+      content: '';
+      width: 40%;
+      height: 100%;
+      background: var(--primary-color);
+      position: absolute;
+      top: 0;
+      left: -40%;
+      animation: loading 1s infinite ease;
+    }
+
+    @keyframes loading {
+      from { left: -40%; }
+      to { left: 100%; }
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div id="loader" class="loader" style="display: none;"></div>
+<div class="toast-container"></div>
+
+<nav class="navbar navbar-expand-lg navbar-light mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <img src="images/logo.png" class="me-2" alt="Logo">
+      Sistema de Gestión de Carritos
+    </a>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div class="row">
+    <div class="col-lg-5">
+      <div class="card mb-4 animate__animated animate__fadeIn">
+        <div class="card-header">
+          <h4 id="formTitle" class="m-0">Crear Nuevo Carrito</h4>
+        </div>
+        <div class="card-body">
+          <form id="cartForm">
+            <input type="hidden" id="cartId">
+            <div class="mb-4">
+              <label for="userId" class="form-label">Usuario</label>
+              <select class="form-select" id="userId" required>
+              </select>
+            </div>
+
+            <div id="itemsContainer">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0">Items del Carrito</h5>
+                <button type="button" class="btn btn-primary btn-sm" onclick="addItemField()">
+                  + Agregar Item
+                </button>
+              </div>
+              <div class="items-list mb-4">
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary flex-grow-1">
+                <span class="save-text">Guardar Carrito</span>
+                <span class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                Limpiar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card animate__animated animate__fadeIn">
+        <div class="card-header">
+          <h4 class="m-0">Lista de Carritos</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Items</th>
+                <th>Acciones</th>
+              </tr>
+              </thead>
+              <tbody id="cartsList">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL_CART = 'http://localhost:8083/carts';
+  const API_URL_USERS = 'http://localhost:8082/users';
+  const API_URL_PRODUCTS = 'http://localhost:8081/products';
+  const usersMap = new Map();
+
+  let editMode = false;
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCarts();
+    loadUsers();
+  });
+
+  document.getElementById('cartForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cartData = getFormData();
+
+      if (editMode) {
+          updateCart(cartData);
+      } else {
+          createCart(cartData);
+      }
+  });
+
+  function addItemField(productId = '', quantity = 1) {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item-entry mb-3 p-3 border';
+      itemDiv.innerHTML = `
+          <div class="row">
+              <div class="col">
+                  <label class="form-label">ID Producto:</label>
+                  <select class="form-control product-id" required>
+                      <!-- Opciones de productos se llenarán dinámicamente -->
+                  </select>
+              </div>
+              <div class="col">
+                  <label class="form-label">Cantidad:</label>
+                  <input type="number" class="form-control quantity" value="${quantity}" required>
+              </div>
+              <div class="col-auto d-flex align-items-end">
+                  <button type="button" class="btn btn-danger mb-3" onclick="this.parentElement.parentElement.parentElement.remove()">
+                      Eliminar
+                  </button>
+              </div>
+          </div>
+      `;
+      document.querySelector('.items-list').appendChild(itemDiv);
+      loadProducts(itemDiv.querySelector('.product-id'), productId);
+  }
+  function getFormData() {
+      const items = [];
+      document.querySelectorAll('.item-entry').forEach(item => {
+          items.push({
+              productId: parseInt(item.querySelector('.product-id').value),
+              quantity: parseInt(item.querySelector('.quantity').value)
+          });
+      });
+
+      return {
+          id: document.getElementById('cartId').value || null,
+          userId: parseInt(document.getElementById('userId').value),
+          items: items
+      };
+  }
+
+  async function loadUsers() {
+    try {
+        const response = await fetch(API_URL_USERS);
+        const users = await response.json();
+        const userSelect = document.getElementById('userId');
+        userSelect.innerHTML = users.map(user => `<option value="${user.id}">${user.username}</option>`).join('');
+
+        users.forEach(user => {
+            usersMap.set(user.id, user.username);
+        });
+    } catch (error) {
+        alert('Error al cargar los usuarios: ' + error);
+    }
+  }
+
+  async function loadProducts(selectElement, selectedProductId = '') {
+      try {
+          const response = await fetch(API_URL_PRODUCTS);
+          const products = await response.json();
+          selectElement.innerHTML = products.map(product => `<option value="${product.id}" ${product.id == selectedProductId ? 'selected' : ''}>${product.name}</option>`).join('');
+      } catch (error) {
+          alert('Error al cargar los productos: ' + error);
+      }
+  }
+  async function loadCarts() {
+      try {
+          const response = await fetch(API_URL_CART);
+          const carts = await response.json();
+          displayCarts(carts);
+      } catch (error) {
+          alert('Error al cargar los carritos: ' + error);
+      }
+  }
+
+  function displayCarts(carts) {
+    const tbody = document.getElementById('cartsList');
+    tbody.innerHTML = '';
+    carts.forEach(cart => {
+        const tr = document.createElement('tr');
+        const userName = usersMap.get(cart.userId) || 'Desconocido';
+        tr.innerHTML = `
+            <td>${cart.id}</td>
+            <td>${userName}</td>
+            <td>${cart.items.length} items</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick='editCart(${JSON.stringify(cart)})'>Editar</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteCart(${cart.id})">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+  }
+
+  async function createCart(cartData) {
+      try {
+          const response = await fetch(API_URL_CART, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(cartData)
+          });
+
+          if (response.ok) {
+              resetForm();
+              loadCarts();
+              alert('Carrito creado exitosamente');
+          } else {
+              alert('Error al crear el carrito');
+          }
+      } catch (error) {
+          alert('Error: ' + error);
+      }
+  }
+  async function updateCart(cartData) {
+      try {
+          const response = await fetch(`${API_URL_CART}/${cartData.id}`, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(cartData)
+          });
+
+          if (response.ok) {
+              resetForm();
+              loadCarts();
+              alert('Carrito actualizado exitosamente');
+          } else {
+              alert('Error al actualizar el carrito');
+          }
+      } catch (error) {
+          alert('Error: ' + error);
+      }
+  }
+
+  async function deleteCart(id) {
+      if (confirm('¿Está seguro de eliminar este carrito?')) {
+          try {
+              const response = await fetch(`${API_URL_CART}/${id}`, {
+                  method: 'DELETE'
+              });
+
+              if (response.ok) {
+                  loadCarts();
+                  alert('Carrito eliminado exitosamente');
+              } else {
+                  alert('Error al eliminar el carrito');
+              }
+          } catch (error) {
+              alert('Error: ' + error);
+          }
+      }
+  }
+
+  function editCart(cart) {
+      editMode = true;
+      document.getElementById('formTitle').textContent = 'Editar Carrito';
+      document.getElementById('cartId').value = cart.id;
+      document.getElementById('userId').value = cart.userId;
+
+      document.querySelector('.items-list').innerHTML = '';
+      cart.items.forEach(item => addItemField(item.productId, item.quantity));
+  }
+
+  function resetForm() {
+      editMode = false;
+      document.getElementById('formTitle').textContent = 'Crear Nuevo Carrito';
+      document.getElementById('cartForm').reset();
+      document.getElementById('cartId').value = '';
+      document.querySelector('.items-list').innerHTML = '';
+      addItemField();
+  }
+
+  addItemField();
+</script>
+</body>
+</html>

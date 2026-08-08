@@ -1,0 +1,92 @@
+services:
+  # Product Service
+  product-service:
+    build: ./Product_Service
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://product-db:3306/Product_Service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Xme.nb#JJHfU%kCdpes^
+    depends_on:
+      - product-db
+    networks:
+      - app-network
+
+  # User Service
+  user-service:
+    build: ./user_service
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://user-db:3306/User_Service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Xme.nb#JJHfU%kCdpes^
+    depends_on:
+      - user-db
+    networks:
+      - app-network
+
+  cart-service:
+    build: ./Cart_Service
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://cart-db:3306/Cart_Service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Xme.nb#JJHfU%kCdpes^
+    networks:
+      - app-network
+    depends_on:
+      - cart-db
+
+  # MySQL Database for Product Service
+  product-db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=Xme.nb#JJHfU%kCdpes^
+      - MYSQL_DATABASE=Product_Service  # Base de datos para el Product Service
+    ports:
+      - "3308:3306"
+    networks:
+      - app-network
+    volumes:
+      - product-db-data:/var/lib/mysql
+
+  # MySQL Database for User Service
+  user-db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=Xme.nb#JJHfU%kCdpes^
+      - MYSQL_DATABASE=User_Service  # Base de datos para el User Service
+    ports:
+      - "3307:3306"
+    networks:
+      - app-network
+    volumes:
+      - user-db-data:/var/lib/mysql
+
+  # MySQL Database for Cart Service
+  cart-db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=Xme.nb#JJHfU%kCdpes^
+      - MYSQL_DATABASE=Cart_Service  # Base de datos para el Cart Service
+    ports:
+      - "3309:3306"  # Usa otro puerto en tu host
+    networks:
+      - app-network
+    volumes:
+      - cart-db-data:/var/lib/mysql
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  product-db-data:
+    driver: local
+  user-db-data:
+    driver: local
+  cart-db-data:
+    driver: local
